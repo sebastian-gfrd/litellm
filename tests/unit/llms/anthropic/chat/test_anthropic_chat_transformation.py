@@ -6798,3 +6798,30 @@ def test_chat_dummy_tool_result_for_an_orphaned_tool_call_replays_a_byte_identic
     _assert_prefix_stable(requests)
     assert [m["role"] for m in requests[0]["messages"]] == ["user", "assistant", "user"]
     assert requests[0]["messages"][2]["content"][0]["type"] == "tool_result"
+
+
+@pytest.mark.parametrize("usage_val", [None, "missing"])
+def test_anthropic_transform_parsed_response_missing_usage(usage_val):
+    from litellm.types.utils import ModelResponse
+
+    config = AnthropicConfig()
+    completion_response = {
+        "id": "msg_123",
+        "type": "message",
+        "role": "assistant",
+        "content": [{"type": "text", "text": "Hello"}],
+        "model": "claude-3-5-sonnet-20241022",
+        "stop_reason": "end_turn",
+    }
+    if usage_val != "missing":
+        completion_response["usage"] = usage_val
+
+    raw_response = httpx.Response(status_code=200, headers={})
+    model_response = ModelResponse()
+
+    res = config.transform_parsed_response(
+        completion_response=completion_response,
+        raw_response=raw_response,
+        model_response=model_response,
+    )
+    assert res.choices[0].message.content == "Hello"

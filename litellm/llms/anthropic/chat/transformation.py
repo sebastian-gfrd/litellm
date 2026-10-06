@@ -2675,7 +2675,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
         )
 
         usage: Final = self.calculate_usage(
-            usage_object=completion_response["usage"],
+            usage_object=completion_response.get("usage") or {},
             reasoning_content=reasoning_content,
             completion_response=completion_response,
             speed=speed,
